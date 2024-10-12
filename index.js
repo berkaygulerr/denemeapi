@@ -6,6 +6,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 require("dotenv").config();
 
+const cors = require('cors');
+
 const groupNamesTr = [
   "A LİGİ, 1. GRUP",
   "A LİGİ, 2. GRUP",
@@ -33,6 +35,8 @@ function loadTeamTranslations() {
     return {};
   }
 }
+
+app.use(cors());
 
 app.get("/api/standings", async (req, res) => {
   try {
