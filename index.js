@@ -64,7 +64,6 @@ app.get("/api/standings", async (req, res) => {
         await Promise.all(
           standing.rows.map((team) => {
             const teamData = {
-              date: new Date().toISOString(),
               rank: team.position,
               team: teamTranslations[team.id]?.name || team.team.name,
               slug: team.team.slug,
