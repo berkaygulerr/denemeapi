@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
-require('dotenv').config();
+require("dotenv").config();
 
 const groupNamesTr = [
   "A LİGİ, 1. GRUP",
@@ -64,6 +64,7 @@ app.get("/api/standings", async (req, res) => {
         await Promise.all(
           standing.rows.map((team) => {
             const teamData = {
+              date: new Date().toISOString(),
               rank: team.position,
               team: teamTranslations[team.id]?.name || team.team.name,
               slug: team.team.slug,
