@@ -98,6 +98,7 @@ app.get("/standing/:leagueName", async (req, res) => {
         const team = row.team;
 
         const teamData = {
+          date: new Date(Date.now()).toLocaleString(),
           rank: row.position,
           team: teamTranslations ? teamTranslations[row.id].name : team.name,
           slug: team.slug,
