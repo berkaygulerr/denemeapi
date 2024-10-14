@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 require("dotenv").config();
 
-const cors = require('cors');
+const cors = require("cors");
 
 const groupNamesTr = [
   "A LİGİ, 1. GRUP",
@@ -38,18 +38,42 @@ function loadTeamTranslations() {
 
 app.use(cors());
 
-app.get("/api/standings", async (req, res) => {
+app.get("/standing/:leagueName", async (req, res) => {
   try {
+    const leagueName = req.params.leagueName;
+
+    var league = {};
+
+    switch (leagueName) {
+      case "nations-league":
+        league.leagueId = "10783";
+        league.seasonId = "58337";
+        break;
+      case "super-lig":
+        league.leagueId = "52";
+        league.seasonId = "63814";
+        break;
+      case "premier-league":
+        league.leagueId = "17";
+        league.seasonId = "61627";
+        break;
+
+      default:
+        break;
+    }
+
+    const host = "free-api-live-football-data.p.rapidapi.com";
+
     const options = {
       method: "GET",
-      url: "https://free-api-live-football-data.p.rapidapi.com/football-league-standings-total",
+      url: `https://${host}/football-league-standings-total`,
       params: {
-        leagueid: "10783",
-        seasonid: "58337",
+        leagueid: league.leagueId,
+        seasonid: league.seasonId,
       },
       headers: {
         "x-rapidapi-key": process.env.API_KEY,
-        "x-rapidapi-host": "free-api-live-football-data.p.rapidapi.com",
+        "x-rapidapi-host": host,
       },
     };
 
@@ -57,44 +81,46 @@ app.get("/api/standings", async (req, res) => {
     const data = response.data;
     const standings = data.response.standings;
 
-    const teamTranslations = loadTeamTranslations();
+    if (leagueName == "nations-league")
+      var teamTranslations = loadTeamTranslations();
+
     const groups = {};
 
-    await Promise.all(
-      standings.map(async (standing, index) => {
-        const groupName = groupNamesTr[index];
-        groups[groupName] = [];
+    standings.map(async (standing, index) => {
+      const tournament = standing.tournament;
 
-        await Promise.all(
-          standing.rows.map((team) => {
-            const teamData = {
-              rank: team.position,
-              team: teamTranslations[team.id]?.name || team.team.name,
-              slug: team.team.slug,
-              id: team.team.id,
-              played: team.matches,
-              win: team.wins,
-              draw: team.draws,
-              lose: team.losses,
-              goalfor: team.scoresFor,
-              goalagainst: team.scoresAgainst,
-              goaldistance: team.scoresFor - team.scoresAgainst,
-              point: team.points,
-              logo: teamTranslations[team.id]?.logo,
-              league: "nations-league",
-            };
+      if (leagueName == "nations-league") var groupName = groupNamesTr[index];
+      else var groupName = tournament.name;
 
-            groups[groupName].push(teamData);
-          })
-        );
-      })
-    );
+      groups[groupName] = [];
+
+      standing.rows.map((row) => {
+        const team = row.team;
+
+        const teamData = {
+          rank: row.position,
+          team: teamTranslations ? teamTranslations[row.id].name : team.name,
+          slug: team.slug,
+          id: team.id,
+          played: row.matches,
+          win: row.wins,
+          draw: row.draws,
+          lose: row.losses,
+          goalfor: row.scoresFor,
+          goalagainst: row.scoresAgainst,
+          goaldistance: row.scoresFor - row.scoresAgainst,
+          point: row.points,
+          logo: teamTranslations ? teamTranslations[row.id].name : "",
+          league: tournament.name,
+          leagueslug: tournament.slug,
+        };
+
+        groups[groupName].push(teamData);
+      });
+    });
 
     res.set({
       "Cache-Control": "public, max-age=15, must-revalidate",
-      Pragma: "no-cache",
-      Expires: "0",
-      "Surrogate-Control": "no-store",
     });
 
     return res.json(groups);
