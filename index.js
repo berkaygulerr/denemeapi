@@ -111,7 +111,7 @@ app.get("/standing/:leagueName", async (req, res) => {
           goalagainst: row.scoresAgainst,
           goaldistance: row.scoresFor - row.scoresAgainst,
           point: row.points,
-          logo: teamTranslations ? teamTranslations[row.id].name : "",
+          logo: teamTranslations ? teamTranslations[row.id].logo : "",
           league: tournament.name,
           leagueslug: tournament.slug,
         };
